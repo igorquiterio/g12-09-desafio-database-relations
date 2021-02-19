@@ -32,16 +32,64 @@ class CreateOrderService {
     const customerExists = await this.customersRepository.findById(customer_id);
 
     if (!customerExists) {
-      throw new AppError('Could not find any customer with the given if');
+      throw new AppError('Could not find any customer with the given id');
     }
 
     const existentProducts = await this.productsRepository.findAllById(
       products,
     );
+
+    const existentProductsIds = existentProducts.map(product => product.id);
+
+    const checkInexistentProducts = products.filter(
+      product => !existentProductsIds.includes(product.id),
+    );
+
+    if (checkInexistentProducts.length) {
+      throw new AppError(
+        `Could not find products ${checkInexistentProducts
+          .map(prod => prod.id)
+          .join(', ')}`,
+      );
+    }
+
+    const productsNotAvailable = products.filter(
+      product =>
+        existentProducts
+          .filter(existentProd => existentProd.id === product.id)
+          .filter(
+            productInStock => productInStock.quantity < product.quantity,
+          )[0],
+    );
+
+    if (productsNotAvailable.length) {
+      throw new AppError(`quantity not avalable for this products {checkInexistentProducts
+        .map(prod => prod.id)
+        .join(', ')}`);
+    }
+
+    const serializedProducts = products.map(product => ({
+      product_id: product.id,
+      quantity: product.quantity,
+      price: existentProducts.filter(prod => prod.id === product.id)[0].price,
+    }));
+
+    const order = await this.ordersRepository.create({
+      customer: customerExists,
+      products: serializedProducts,
+    });
+
+    const orderedProducts = products.map(product => ({
+      id: product.id,
+      quantity:
+        existentProducts.filter(prod => prod.id === product.id)[0].quantity -
+        product.quantity,
+    }));
+
+    await this.productsRepository.updateQuantity(orderedProducts);
+
+    return order;
   }
-
-  console.log(existentProducts);
-
 }
 
 export default CreateOrderService;

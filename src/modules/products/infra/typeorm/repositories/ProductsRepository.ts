@@ -48,6 +48,16 @@ class ProductsRepository implements IProductsRepository {
     );
 
     return findProducts;
+
+    // const productsIds = products.map(product => product.id);
+
+    // const existentProducts = await this.ormRepository.find({
+    //   where: {
+    //     id: In(productsIds),
+    //   },
+    // });
+
+    // return existentProducts;
   }
 
   public async updateQuantity(
