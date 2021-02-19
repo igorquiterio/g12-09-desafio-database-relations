@@ -24,7 +24,22 @@ class FindOrderService {
   public async execute({ id }: IRequest): Promise<Order | undefined> {
     const order = await this.ordersRepository.findById(id);
 
-    return order;
+    if (!order) {
+      return undefined;
+    }
+
+    const orderProd = order?.order_products.map(prod => ({
+      ...prod,
+      quantity: +prod.quantity,
+    }));
+
+    const response: Order = {
+      ...order,
+      order_products: orderProd || [],
+      id: order.id,
+    };
+
+    return response;
   }
 }
 
