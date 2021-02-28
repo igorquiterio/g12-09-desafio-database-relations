@@ -41,6 +41,8 @@ class CreateOrderService {
 
     const existentProductsIds = existentProducts.map(product => product.id);
 
+    console.log(existentProductsIds);
+
     const checkInexistentProducts = products.filter(
       product => !existentProductsIds.includes(product.id),
     );
